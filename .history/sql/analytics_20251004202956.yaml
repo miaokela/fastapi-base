@@ -1,0 +1,94 @@
+user_stats: |
+  SELECT 
+    u.id,
+    u.username,
+    u.email,
+    COUNT(up.id) as profile_count,
+    u.created_at,
+    CASE 
+      WHEN u.is_active = true THEN '活跃'
+      ELSE '非活跃'
+    END as status
+  FROM users u
+  LEFT JOIN user_profiles up ON u.id = up.user_id
+  WHERE u.created_at BETWEEN '{{ date_from }}' AND '{{ date_to }}'
+  GROUP BY u.id, u.username, u.email, u.created_at, u.is_active
+  ORDER BY profile_count DESC, u.created_at DESC
+  LIMIT {{ limit | default(value=100) }}
+
+post_stats: |
+  SELECT 
+    u.username,
+    u.email,
+    COUNT(p.id) as post_count,
+    COUNT(CASE WHEN p.is_published = true THEN 1 END) as published_count
+  FROM users u
+  LEFT JOIN posts p ON u.id = p.author_id
+  {% if date_from %}
+  WHERE u.created_at >= '{{ date_from }}'
+  {% endif %}
+  {% if date_to %}
+  {% if date_from %}AND{% else %}WHERE{% endif %} u.created_at <= '{{ date_to }}'
+  {% endif %}
+  GROUP BY u.id, u.username, u.email
+  HAVING COUNT(p.id) > {{ min_posts | default(value=0) }}
+  ORDER BY post_count DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+active_users_by_period: |
+  SELECT 
+    DATE_TRUNC('{{ period | default(value="day") }}', u.created_at) as period,
+    COUNT(*) as user_count,
+    COUNT(CASE WHEN u.is_active = true THEN 1 END) as active_count
+  FROM users u
+  WHERE u.created_at >= '{{ start_date }}'
+  AND u.created_at <= '{{ end_date }}'
+  GROUP BY DATE_TRUNC('{{ period | default(value="day") }}', u.created_at)
+  ORDER BY period DESC
+
+top_authors: |
+  SELECT 
+    u.id,
+    u.username,
+    u.email,
+    COUNT(p.id) as total_posts,
+    COUNT(CASE WHEN p.is_published = true THEN 1 END) as published_posts,
+    MAX(p.created_at) as last_post_date
+  FROM users u
+  INNER JOIN posts p ON u.id = p.author_id
+  {% if days %}
+  WHERE p.created_at >= NOW() - INTERVAL '{{ days }} days'
+  {% endif %}
+  GROUP BY u.id, u.username, u.email
+  HAVING COUNT(p.id) >= {{ min_posts | default(value=1) }}
+  ORDER BY total_posts DESC, published_posts DESC
+  LIMIT {{ limit | default(value=10) }}
+
+domain_analysis: |
+  SELECT 
+    SUBSTRING(email FROM '@(.*)$') as email_domain,
+    COUNT(*) as user_count,
+    COUNT(CASE WHEN is_active = true THEN 1 END) as active_count,
+    ROUND(
+      COUNT(CASE WHEN is_active = true THEN 1 END) * 100.0 / COUNT(*), 
+      2
+    ) as active_percentage
+  FROM users
+  GROUP BY SUBSTRING(email FROM '@(.*)$')
+  HAVING COUNT(*) >= {{ min_users | default(value=1) }}
+  ORDER BY user_count DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+monthly_growth: |
+  SELECT 
+    DATE_TRUNC('month', created_at) as month,
+    COUNT(*) as new_users,
+    SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', created_at)) as cumulative_users
+  FROM users
+  WHERE created_at >= '{{ start_date | default(value="2024-01-01") }}'
+  GROUP BY DATE_TRUNC('month', created_at)
+  ORDER BY month DESC

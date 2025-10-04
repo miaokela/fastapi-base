@@ -1,0 +1,130 @@
+select_by_id: |
+  SELECT 
+    id,
+    title,
+    content,
+    author_id,
+    is_published,
+    created_at,
+    updated_at
+  FROM posts 
+  WHERE id = {{ post_id }}
+
+select_all: |
+  SELECT 
+    id,
+    title,
+    content,
+    author_id,
+    is_published,
+    created_at,
+    updated_at
+  FROM posts
+  {% if is_published is defined %}
+  WHERE is_published = {{ is_published }}
+  {% endif %}
+  ORDER BY created_at DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+  {% if offset %}
+  OFFSET {{ offset }}
+  {% endif %}
+
+select_by_author: |
+  SELECT 
+    id,
+    title,
+    content,
+    is_published,
+    created_at,
+    updated_at
+  FROM posts 
+  WHERE author_id = {{ author_id }}
+  {% if is_published is defined %}
+  AND is_published = {{ is_published }}
+  {% endif %}
+  ORDER BY created_at DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+select_with_author: |
+  SELECT 
+    p.id,
+    p.title,
+    p.content,
+    p.is_published,
+    p.created_at,
+    u.username as author_username,
+    u.email as author_email
+  FROM posts p
+  INNER JOIN users u ON p.author_id = u.id
+  {% if is_published is defined %}
+  WHERE p.is_published = {{ is_published }}
+  {% endif %}
+  ORDER BY p.created_at DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+search_by_title: |
+  SELECT 
+    id,
+    title,
+    content,
+    author_id,
+    is_published,
+    created_at
+  FROM posts 
+  WHERE title ILIKE '%{{ keyword }}%'
+  {% if is_published is defined %}
+  AND is_published = {{ is_published }}
+  {% endif %}
+  ORDER BY created_at DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+recent_posts: |
+  SELECT 
+    p.id,
+    p.title,
+    p.created_at,
+    u.username as author_username
+  FROM posts p
+  INNER JOIN users u ON p.author_id = u.id
+  WHERE p.created_at >= NOW() - INTERVAL '{{ days | default(value=7) }} days'
+  AND p.is_published = true
+  ORDER BY p.created_at DESC
+  {% if limit %}
+  LIMIT {{ limit }}
+  {% endif %}
+
+count_by_author: |
+  SELECT COUNT(*) as post_count
+  FROM posts 
+  WHERE author_id = {{ author_id }}
+  {% if is_published is defined %}
+  AND is_published = {{ is_published }}
+  {% endif %}
+
+insert: |
+  INSERT INTO posts (title, content, author_id, is_published)
+  VALUES ('{{ title }}', '{{ content }}', {{ author_id }}, {{ is_published | default(value=false) }})
+  RETURNING id, title, author_id, is_published, created_at
+
+update_by_id: |
+  UPDATE posts 
+  SET 
+    {% if title %}title = '{{ title }}',{% endif %}
+    {% if content %}content = '{{ content }}',{% endif %}
+    {% if is_published is defined %}is_published = {{ is_published }},{% endif %}
+    updated_at = NOW()
+  WHERE id = {{ post_id }}
+  RETURNING id, title, is_published, updated_at
+
+delete_by_id: |
+  DELETE FROM posts 
+  WHERE id = {{ post_id }}
+  RETURNING id, title, author_id
