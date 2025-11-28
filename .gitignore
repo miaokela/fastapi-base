@@ -123,4 +123,4 @@ docker-compose.override.yml
 # Logs
 logs/
 *.log
-.history/
+**/.history/

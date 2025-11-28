@@ -6,21 +6,13 @@ set -e
 echo "=== 开发环境启动 ==="
 
 # 检查虚拟环境
-if [ ! -d "venv" ]; then
+if [ ! -d ".venv" ]; then
     echo "虚拟环境不存在，请先运行setup.sh"
     exit 1
 fi
 
 # 激活虚拟环境
-source venv/bin/activate
-
-# 检查服务依赖
-echo "检查Redis服务..."
-if ! redis-cli ping > /dev/null 2>&1; then
-    echo "警告: Redis服务未运行，请启动Redis"
-    echo "macOS: brew services start redis"
-    echo "Ubuntu: sudo systemctl start redis"
-fi
+source .venv/bin/activate
 
 # 启动FastAPI应用
 echo "启动FastAPI应用..."

@@ -6,7 +6,7 @@ celery_app = Celery(
     "fastapi-base",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["celery_app.tasks"]
+    include=["celery_app.tasks.test_tasks"]
 )
 
 # Celery配置
@@ -17,31 +17,25 @@ celery_app.conf.update(
     result_serializer="json",
     
     # 时区设置
-    timezone="UTC",
+    timezone="Asia/Shanghai",
     enable_utc=True,
     
-    # 任务路由
+    # 任务路由（使用默认 celery 队列）
     task_routes={
-        "celery_app.tasks.user_tasks.*": {"queue": "user_queue"},
-        "celery_app.tasks.email_tasks.*": {"queue": "email_queue"},
-        "celery_app.tasks.general_tasks.*": {"queue": "general_queue"},
+        "celery_app.tasks.test_tasks.*": {"queue": "celery"},
     },
     
     # 任务过期时间
     task_time_limit=300,  # 5分钟
     task_soft_time_limit=240,  # 4分钟
     
-    # 定时任务配置
-    beat_schedule={
-        "test-periodic-task": {
-            "task": "celery_app.tasks.general_tasks.test_periodic_task",
-            "schedule": 60.0,  # 每60秒执行一次
-        },
-        "cleanup-expired-tokens": {
-            "task": "celery_app.tasks.user_tasks.cleanup_expired_tokens",
-            "schedule": 3600.0,  # 每小时执行一次
-        },
-    },
+    # 使用数据库调度器（类似 django-celery-beat）
+    # 启动 beat 时使用: celery -A celery_app.celery beat -S celery_app.scheduler:DatabaseScheduler
+    beat_scheduler="celery_app.scheduler:DatabaseScheduler",
+    
+    # 默认定时任务配置（仅在不使用数据库调度器时生效）
+    # 使用数据库调度器后，这些配置将被忽略，所有定时任务通过 Admin 管理
+    beat_schedule={},
 )
 
 # 自动发现任务

@@ -3,20 +3,13 @@
 echo "=== 启动Celery服务 ==="
 
 # 检查虚拟环境
-if [ ! -d "venv" ]; then
+if [ ! -d ".venv" ]; then
     echo "虚拟环境不存在，请先运行setup.sh"
     exit 1
 fi
 
 # 激活虚拟环境
-source venv/bin/activate
-
-# 检查Redis服务
-echo "检查Redis服务..."
-if ! redis-cli ping > /dev/null 2>&1; then
-    echo "错误: Redis服务未运行，请启动Redis"
-    exit 1
-fi
+source .venv/bin/activate
 
 # 启动选项
 case "$1" in
@@ -25,8 +18,10 @@ case "$1" in
         celery -A celery_app.celery worker --loglevel=info
         ;;
     "beat")
-        echo "启动Celery Beat (定时任务调度器)..."
-        celery -A celery_app.celery beat --loglevel=info
+        echo "启动Celery Beat (数据库定时任务调度器)..."
+        celery -A celery_app.celery beat \
+            -S celery_app.scheduler:DatabaseScheduler \
+            --loglevel=info
         ;;
     "flower")
         echo "启动Flower监控..."
@@ -38,7 +33,7 @@ case "$1" in
         # 使用tmux或screen在后台启动多个服务
         if command -v tmux &> /dev/null; then
             tmux new-session -d -s celery-worker "celery -A celery_app.celery worker --loglevel=info"
-            tmux new-session -d -s celery-beat "celery -A celery_app.celery beat --loglevel=info"
+            tmux new-session -d -s celery-beat "celery -A celery_app.celery beat -S celery_app.scheduler:DatabaseScheduler --loglevel=info"
             tmux new-session -d -s celery-flower "celery -A celery_app.celery flower --port=5555"
             echo "Celery服务已在tmux会话中启动:"
             echo "  - Worker: tmux attach -t celery-worker"

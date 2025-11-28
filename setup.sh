@@ -12,14 +12,14 @@ if ! command -v python3 &> /dev/null; then
 fi
 
 # 检查虚拟环境
-if [ ! -d "venv" ]; then
+if [ ! -d ".venv" ]; then
     echo "创建虚拟环境..."
-    python3 -m venv venv
+    python3 -m venv .venv
 fi
 
 # 激活虚拟环境
 echo "激活虚拟环境..."
-source venv/bin/activate
+source .venv/bin/activate
 
 # 升级pip
 echo "升级pip..."
@@ -38,12 +38,16 @@ fi
 
 # 创建必要的目录
 echo "创建必要目录..."
-mkdir -p uploads logs migrations
+mkdir -p uploads logs
 
-# 数据库迁移
-echo "执行数据库迁移..."
-aerich init -t config.database.TORTOISE_ORM
-aerich init-db
+# 数据库初始化
+echo "初始化数据库..."
+if [ -f "init_schema.sql" ]; then
+    sqlite3 default_db.sqlite3 < init_schema.sql
+    echo "数据库初始化完成"
+else
+    echo "警告: init_schema.sql 文件不存在，跳过数据库初始化"
+fi
 
 echo "=== 项目配置完成 ==="
 echo ""

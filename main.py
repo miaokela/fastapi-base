@@ -11,7 +11,8 @@ import logging
 from config.settings import settings
 from config.database import DATABASE_CONFIG
 from app.utils.redis_client import redis_client
-from app.views.user_views import router as user_router, UserViewSet, UserProfileViewSet, PostViewSet
+from app.views.user_views import router as user_router, UserViewSet, UserProfileViewSet
+from app.admin import admin_router
 from fastapi_cbv import viewset_routes
 
 
@@ -167,15 +168,15 @@ def register_routes():
     # 包含认证路由（已在 user_views.py 中通过 add_api_route 注册）
     app.include_router(user_router)
     
+    # 包含 Admin 管理路由
+    app.include_router(admin_router, prefix="/api/v1")
+    
     # 使用 viewset_routes 自动注册 ViewSet 的所有 CRUD 路由
     # 用户管理路由 - 自动生成 GET/POST/PUT/PATCH/DELETE
     viewset_routes(app, UserViewSet, prefix="/api/v1/users")
     
     # 用户资料路由 - 自动生成 GET/POST/PUT/PATCH/DELETE
     viewset_routes(app, UserProfileViewSet, prefix="/api/v1/profiles")
-    
-    # 文章路由 - 自动生成 GET/POST/PUT/PATCH/DELETE
-    viewset_routes(app, PostViewSet, prefix="/api/v1/posts")
 
 
 # Celery任务路由

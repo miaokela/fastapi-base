@@ -10,8 +10,8 @@ from datetime import datetime
 
 from app.core.deps import get_current_active_user, get_current_superuser
 from app.core.security import get_password_hash, verify_password, create_access_token
-from app.models.models import User, UserProfile, Post
-from app.serializers import UserSerializer, UserProfileSerializer, PostSerializer
+from app.models.models import User, UserProfile
+from app.serializers import UserSerializer, UserProfileSerializer
 from app.schemas.schemas import (
     UserCreate,
     Token,
@@ -124,17 +124,3 @@ class UserProfileViewSet(ModelViewSet):
     def get_queryset(self):
         """获取查询集"""
         return UserProfile.all()
-
-
-class PostViewSet(ModelViewSet):
-    """文章视图集 - 使用 ModelViewSet 自动生成 CRUD"""
-    serializer_class = PostSerializer
-    # 使用默认配置，支持过滤和搜索
-    # filter_backends = [TortoiseFilterBackend, TortoiseSearchBackend]
-    # search_fields = ['title', 'content']
-    # ordering_fields = ['created_at', 'title']
-    # ordering = ['-created_at']
-    
-    def get_queryset(self):
-        """获取查询集"""
-        return Post.all()

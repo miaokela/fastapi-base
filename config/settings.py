@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # 数据库配置
-    DATABASE_URL: str = "sqlite://./db.sqlite3"
+    DATABASE_URL: str = "sqlite://./default_db.sqlite3"
     
     # Redis配置
     REDIS_URL: str = "redis://:123456@localhost:16380/0"
