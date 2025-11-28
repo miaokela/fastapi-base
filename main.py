@@ -6,27 +6,19 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from tortoise.contrib.fastapi import register_tortoise
 from contextlib import asynccontextmanager
-import logging
 
 from config.settings import settings
 from config.database import DATABASE_CONFIG
+from config.logging import setup_logging, get_logger
 from app.utils.redis_client import redis_client
 from app.views.user_views import router as user_router, UserViewSet, UserProfileViewSet
 from app.admin import admin_router
 from fastapi_cbv import viewset_routes
 
 
-# 配置日志
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(settings.LOG_FILE),
-        logging.StreamHandler()
-    ]
-)
-
-logger = logging.getLogger(__name__)
+# 配置日志（按天轮转，保留7天）
+setup_logging()
+logger = get_logger(__name__)
 
 
 @asynccontextmanager

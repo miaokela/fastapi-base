@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.signals import setup_logging as celery_setup_logging
 from config.settings import settings
 
 # 创建Celery应用
@@ -8,6 +9,13 @@ celery_app = Celery(
     backend=settings.CELERY_RESULT_BACKEND,
     include=["celery_app.tasks.test_tasks"]
 )
+
+
+@celery_setup_logging.connect
+def config_loggers(*args, **kwargs):
+    """配置 Celery 使用统一的日志系统"""
+    from config.logging import setup_logging
+    setup_logging()
 
 # Celery配置
 celery_app.conf.update(
