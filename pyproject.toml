@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fastapi-base"
 version = "0.1.0"
-description = "FastAPI base project with CBV, Celery, Redis, Tortoise ORM, JWT authentication"
-authors = [{name = "Your Name", email = "your.email@example.com"}]
+description = "FastAPI 基础项目模板，集成 CBV、Celery 定时任务管理（类似 django-celery-beat）、JWT 认证、Admin 管理后台"
+authors = [{name = "miaokela", email = "miaokela@example.com"}]
 requires-python = ">=3.8.1"
 dependencies = [
     "fastapi>=0.104.0",

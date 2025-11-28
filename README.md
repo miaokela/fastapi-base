@@ -1,63 +1,61 @@
-# FastAPI Base 项目
+# FastAPI Base
 
-一个完整的FastA   └── utils/             # 工具模块
-       ├── helpers.py     # 辅助函数
-       ├── redis_client.py  # Redis客户端
+一个功能完整的 FastAPI 基础项目模板，集成了用户认证、定时任务管理（类似 django-celery-beat）、Admin 管理后台等核心功能。
 
-       └── responses.py   # 标准响应格式架，集成了现代Web开发的常用技术栈。
+## ✨ 特性
 
-## 技术栈
+- **FastAPI** - 现代高性能 Python Web 框架
+- **fastapi-cbv** - 基于类的视图（CBV），更好的代码组织
+- **Tortoise ORM** - 异步 ORM，支持 SQLite/PostgreSQL/MySQL
+- **Celery + Redis** - 分布式任务队列
+- **数据库定时任务调度** - 类似 django-celery-beat，支持动态管理定时任务
+- **JWT 认证** - 完整的用户注册、登录、权限控制
+- **Admin 管理 API** - 用户管理、定时任务管理
+- **Docker 支持** - 容器化部署
 
-- **FastAPI** - 现代、快速的Python Web框架
-- **fastapi-cbv** (by miaokela) - 基于类的视图，提供更好的代码组织
-- **Tortoise ORM** - 异步ORM，支持多种数据库
-- **Celery** - 分布式任务队列，支持异步和定时任务
-- **Redis** - 缓存和消息队列
-- **query-builder-tool** (by miaokela) - 复杂SQL查询构建工具
-- **JWT** - 用户认证和授权
-- **Docker** - 容器化部署
-
-## 项目结构
+## 📁 项目结构
 
 ```
 fastapi-base/
-├── app/                    # 应用核心代码
-│   ├── core/              # 核心功能
-│   │   ├── deps.py        # 依赖注入
-│   │   └── security.py    # 安全相关
-│   ├── models/            # 数据模型
-│   │   └── models.py      # Tortoise ORM模型
-│   ├── schemas/           # Pydantic模式
-│   │   └── schemas.py     # 数据验证模式
-│   ├── views/             # 视图控制器
-│   │   └── user_views.py  # 用户相关视图
-│   └── utils/             # 工具模块
-│       ├── helpers.py     # 辅助函数
-│       ├── query_builder.py # 查询构建器
-│       ├── redis_client.py  # Redis客户端
-│       └── responses.py   # 标准响应格式
-├── celery_app/            # Celery应用
-│   ├── celery.py          # Celery配置
-│   └── tasks/             # 任务模块
-│       ├── email_tasks.py # 邮件任务
-│       ├── user_tasks.py  # 用户任务
-│       └── general_tasks.py # 通用任务
-├── config/                # 配置文件
-│   ├── database.py        # 数据库配置
-│   └── settings.py        # 应用设置
-├── main.py                # 应用入口
-├── requirements.txt       # Python依赖
-├── pyproject.toml         # 项目配置
-├── docker-compose.yml     # Docker组合配置
-├── Dockerfile             # Docker镜像配置
-└── 启动脚本/
-    ├── setup.sh           # 环境设置
-    ├── run_dev.sh         # 开发环境启动
-    ├── run_celery.sh      # Celery服务启动
-    └── deploy.sh          # 生产环境部署
+├── app/
+│   ├── admin/              # Admin 管理模块
+│   │   ├── admin_views.py  # 管理接口
+│   │   └── schemas.py      # 管理数据模式
+│   ├── core/               # 核心功能
+│   │   ├── deps.py         # 依赖注入
+│   │   └── security.py     # 安全认证
+│   ├── models/             # 数据模型
+│   │   └── models.py       # Tortoise ORM 模型
+│   ├── schemas/            # Pydantic 模式
+│   ├── services/           # 服务层
+│   │   └── task_scheduler.py  # 定时任务服务
+│   ├── utils/              # 工具模块
+│   │   ├── redis_client.py # Redis 客户端
+│   │   └── responses.py    # 响应格式
+│   └── views/              # 视图控制器
+│       └── user_views.py   # 用户视图
+├── celery_app/             # Celery 应用
+│   ├── celery.py           # Celery 配置
+│   ├── scheduler.py        # 数据库定时任务调度器
+│   └── tasks/              # 任务模块
+│       └── test_tasks.py   # 测试任务
+├── config/                 # 配置文件
+│   ├── database.py         # 数据库配置
+│   └── settings.py         # 应用设置
+├── http/                   # HTTP 测试文件
+│   └── admin.http          # Admin API 测试
+├── tests/                  # 测试用例
+├── init_schema.sql         # 数据库初始化 SQL
+├── main.py                 # 应用入口
+├── requirements.txt        # Python 依赖
+├── pyproject.toml          # 项目配置
+├── docker-compose.yml      # Docker 配置
+├── setup.sh                # 环境设置脚本
+├── run_dev.sh              # 开发环境启动
+└── run_celery.sh           # Celery 服务启动
 ```
 
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 环境设置
 
@@ -66,7 +64,12 @@ fastapi-base/
 git clone <repository-url>
 cd fastapi-base
 
-# 运行设置脚本
+# 创建虚拟环境并安装依赖
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 或使用 setup.sh
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -74,177 +77,183 @@ chmod +x setup.sh
 ### 2. 配置环境变量
 
 ```bash
-# 复制环境配置文件
 cp .env.example .env
-
-# 编辑配置文件
-vim .env
+# 编辑 .env 配置 Redis、数据库等
 ```
 
-### 3. 启动开发环境
+### 3. 初始化数据库
 
 ```bash
-# 启动FastAPI应用
+sqlite3 default_db.sqlite3 < init_schema.sql
+```
+
+### 4. 启动服务
+
+```bash
+# 启动 FastAPI 应用
 ./run_dev.sh
 
-# 在另一个终端启动Celery Worker
+# 启动 Celery Worker（新终端）
 ./run_celery.sh worker
 
-# 在另一个终端启动Celery Beat（可选）
+# 启动 Celery Beat 定时任务调度（新终端）
 ./run_celery.sh beat
 ```
 
-### 4. 访问应用
+### 5. 访问应用
 
-- API文档: http://localhost:8000/docs
-- ReDoc文档: http://localhost:8000/redoc
-- 健康检查: http://localhost:8000/health
+- **API 文档**: http://localhost:8000/docs
+- **ReDoc 文档**: http://localhost:8000/redoc
+- **健康检查**: http://localhost:8000/health
 
-## Docker部署
+## 📡 API 接口
 
-### 开发环境
+### 认证接口
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| POST | `/auth/register` | 用户注册 |
+| POST | `/auth/login` | 用户登录 |
+| GET | `/auth/me` | 获取当前用户信息 |
+
+### Admin 管理接口
+
+> 需要管理员权限（is_superuser 或 is_staff）
+
+#### 用户管理
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/v1/admin/users` | 获取用户列表 |
+| POST | `/api/v1/admin/users` | 创建用户 |
+| GET | `/api/v1/admin/users/{id}` | 获取用户详情 |
+| PUT | `/api/v1/admin/users/{id}` | 更新用户 |
+| DELETE | `/api/v1/admin/users/{id}` | 删除用户 |
+
+#### 定时任务管理
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/v1/admin/tasks` | 获取定时任务列表 |
+| POST | `/api/v1/admin/tasks` | 创建定时任务 |
+| GET | `/api/v1/admin/tasks/{id}` | 获取任务详情 |
+| PUT | `/api/v1/admin/tasks/{id}` | 更新任务 |
+| DELETE | `/api/v1/admin/tasks/{id}` | 删除任务 |
+| POST | `/api/v1/admin/tasks/{id}/enable` | 启用任务 |
+| POST | `/api/v1/admin/tasks/{id}/disable` | 禁用任务 |
+| POST | `/api/v1/admin/tasks/{id}/run` | 立即执行任务 |
+
+#### 调度管理
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/v1/admin/schedules/intervals` | 获取间隔调度列表 |
+| POST | `/api/v1/admin/schedules/intervals` | 创建间隔调度 |
+| GET | `/api/v1/admin/schedules/crontabs` | 获取 Crontab 调度列表 |
+| POST | `/api/v1/admin/schedules/crontabs` | 创建 Crontab 调度 |
+
+#### 其他
+
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| GET | `/api/v1/admin/results` | 获取任务执行结果 |
+| GET | `/api/v1/admin/statistics` | 获取任务统计信息 |
+| GET | `/api/v1/admin/available-tasks` | 获取可用 Celery 任务列表 |
+
+## ⏰ 定时任务管理
+
+本项目实现了类似 django-celery-beat 的数据库定时任务调度功能：
+
+### 特性
+
+- **动态管理**: 通过 API 动态添加、修改、删除定时任务，无需重启服务
+- **多种调度方式**: 支持间隔调度（Interval）和 Crontab 调度
+- **任务状态跟踪**: 记录任务执行次数、最后执行时间
+- **任务结果存储**: 保存任务执行结果和错误信息
+
+### 创建定时任务示例
 
 ```bash
-docker-compose up -d
+# 创建间隔调度（每10秒）
+curl -X POST "http://localhost:8000/api/v1/admin/schedules/intervals" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"every": 10, "period": "seconds"}'
+
+# 创建定时任务
+curl -X POST "http://localhost:8000/api/v1/admin/tasks" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "hello-world-task",
+    "task": "celery_app.tasks.test_tasks.hello_world",
+    "interval_id": 1,
+    "enabled": true,
+    "description": "每10秒打印 Hello World"
+  }'
 ```
 
-### 生产环境
+## 🐳 Docker 部署
 
 ```bash
+# 开发环境
+docker-compose up -d
+
+# 生产环境
 ./deploy.sh
 ```
 
-## API功能
+## 🧪 测试
 
-### 认证相关
+```bash
+# 运行所有测试
+./run_tests.sh
 
-- `POST /api/v1/auth/register` - 用户注册
-- `POST /api/v1/auth/login` - 用户登录
-- `GET /api/v1/auth/me` - 获取当前用户信息
+# 运行单个测试
+./run_single_test.sh tests/test_auth.py
 
-### 用户管理
-
-- `GET /api/v1/users/` - 获取用户列表（管理员）
-- `POST /api/v1/users/` - 创建用户（管理员）
-- `GET /api/v1/users/{user_id}` - 获取指定用户（管理员）
-- `PUT /api/v1/users/{user_id}` - 更新用户（管理员）
-- `DELETE /api/v1/users/{user_id}` - 删除用户（管理员）
-
-### 用户资料
-
-- `GET /api/v1/profile/` - 获取当前用户资料
-- `PUT /api/v1/profile/` - 更新当前用户资料
-
-### 任务管理
-
-- `POST /api/v1/tasks/send-email` - 触发发送邮件任务
-- `POST /api/v1/tasks/generate-report` - 触发生成报告任务
-- `GET /api/v1/tasks/{task_id}/status` - 获取任务状态
-
-### 其他功能
-
-- `GET /api/v1/cache/test` - 测试Redis缓存
-- `GET /api/v1/reports/user-stats` - 获取用户统计报告
-
-## 特性说明
-
-### 1. 基于类的视图 (CBV)
-
-使用 `fastapi-cbv` 提供更好的代码组织：
-
-```python
-@cbv
-class UserViewSet:
-    async def get_users(self):
-        # 获取用户列表
-        pass
+# 使用 http 文件测试 API
+# 在 VS Code 中安装 REST Client 扩展，打开 http/admin.http
 ```
 
-### 2. 异步任务处理
+## 📝 开发指南
 
-使用Celery处理异步和定时任务：
-
-```python
-@celery_app.task
-def send_welcome_email(user_email: str):
-    # 发送欢迎邮件
-    pass
-```
-
-### 3. Redis缓存操作
-
-提供完整的Redis操作接口：
-
-```python
-# 设置缓存
-await redis_client.set_value("key", "value", expire=60)
-
-# 获取缓存
-value = await redis_client.get_value("key")
-```
-
-### 4. 数据库查询
-
-使用 Tortoise ORM 进行数据库查询：
-
-```python
-from app.models.models import User
-
-# 查询活跃用户
-active_users = await User.filter(is_active=True).order_by('-created_at').limit(20)
-
-# 复杂查询
-users_with_profiles = await User.filter(is_active=True).prefetch_related('profile')
-```
-
-### 5. JWT认证
-
-完整的JWT认证系统：
-
-- 用户注册/登录
-- 令牌生成和验证
-- 权限控制（普通用户/管理员）
-
-## 开发指南
-
-### 添加新的API端点
-
-1. 在 `app/schemas/` 中定义数据模式
-2. 在 `app/views/` 中创建视图类
-3. 在 `main.py` 中注册路由
-
-### 添加新的Celery任务
+### 添加新的 Celery 任务
 
 1. 在 `celery_app/tasks/` 中创建任务文件
-2. 定义任务函数并使用 `@celery_app.task` 装饰器
-3. 在需要的地方调用 `task.delay()` 执行任务
+2. 定义任务函数：
+
+```python
+from celery_app.celery import celery_app
+
+@celery_app.task(name="celery_app.tasks.my_tasks.my_task")
+def my_task(arg1, arg2):
+    # 任务逻辑
+    return "result"
+```
+
+3. 在 `celery_app/celery.py` 中添加到 include 列表
+4. 通过 Admin API 创建定时任务
 
 ### 添加新的数据模型
 
-1. 在 `app/models/models.py` 中定义Tortoise ORM模型
-2. 运行数据库迁移：`aerich migrate --name "add_new_model"`
-3. 应用迁移：`aerich upgrade`
+1. 在 `app/models/models.py` 中定义模型
+2. 更新 `init_schema.sql` 添加建表语句
+3. 重新初始化数据库
 
-## 监控和日志
+## ⚙️ 配置说明
 
-- **Flower**: Celery任务监控 (http://localhost:5555)
-- **日志文件**: `app.log`
-- **健康检查**: `/health` 端点
+主要配置在 `config/settings.py` 和 `.env` 文件中：
 
-## 生产环境注意事项
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| DATABASE_URL | 数据库连接 | sqlite://./default_db.sqlite3 |
+| REDIS_URL | Redis 连接 | redis://localhost:6379/0 |
+| CELERY_BROKER_URL | Celery Broker | redis://localhost:6379/1 |
+| SECRET_KEY | JWT 密钥 | 需修改 |
+| ACCESS_TOKEN_EXPIRE_MINUTES | Token 过期时间 | 30 |
 
-1. 修改 `.env` 中的敏感配置
-2. 使用强密钥替换 `SECRET_KEY`
-3. 配置适当的数据库连接
-4. 设置反向代理（Nginx）
-5. 配置SSL证书
-6. 监控和日志收集
-
-## 贡献
-
-欢迎提交Issue和Pull Request来改进这个项目。
-
-## 许可证
+## 📄 许可证
 
 MIT License
 
