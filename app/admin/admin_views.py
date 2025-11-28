@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import JSONResponse
+from tortoise.expressions import Q
 
 from app.core.deps import get_current_active_user, get_current_superuser
 from app.core.security import get_password_hash
@@ -68,7 +69,7 @@ async def list_users(
         query = query.filter(is_active=is_active)
     
     if search:
-        query = query.filter(username__icontains=search) | query.filter(email__icontains=search)
+        query = query.filter(Q(username__icontains=search) | Q(email__icontains=search))
     
     total = await query.count()
     users = await query.offset(skip).limit(limit).order_by("-created_at")
