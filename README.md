@@ -203,6 +203,92 @@ docker-compose up -d
 ./deploy.sh
 ```
 
+## 📦 嵌入式单体部署（PyInstaller）
+
+将整个应用打包成单个可执行文件，适用于嵌入式设备（如树莓派）或无 Python 环境的服务器部署。
+
+### 打包流程
+
+#### 1. 构建 ARM64 打包环境（macOS/x86 主机交叉编译）
+
+```bash
+# 构建 ARM64 Docker 镜像
+docker buildx build --platform linux/arm64 -f Dockerfile.build -t fastapi-base-builder:arm64 .
+```
+
+#### 2. 执行打包
+
+```bash
+# 运行打包（输出到 dist/app）
+docker run --platform linux/arm64 --rm -v "$(pwd)/dist:/output" fastapi-base-builder:arm64
+```
+
+#### 3. 部署到目标设备
+
+```bash
+# 复制可执行文件到目标设备
+scp dist/app user@target-device:/opt/fastapi-app/
+
+# 复制配置文件（可选）
+scp .env user@target-device:/opt/fastapi-app/
+```
+
+### 运行命令
+
+```bash
+# 启动 FastAPI 服务（单 worker）
+./app server
+
+# 启动 FastAPI 服务（多 worker，生产模式）
+./app server --host 0.0.0.0 --port 8000 --workers 4
+
+# 启动 Celery Worker
+./app worker
+
+# 启动 Celery Beat 定时任务调度
+./app beat
+
+# 初始化数据库
+./app init-db
+```
+
+### 配置说明
+
+可执行文件运行时会自动读取同目录下的 `.env` 文件：
+
+```bash
+# .env 示例
+DATABASE_URL=sqlite://./db.sqlite3
+REDIS_URL=redis://:password@localhost:6379/0
+CELERY_BROKER_URL=redis://:password@localhost:6379/1
+CELERY_RESULT_BACKEND=redis://:password@localhost:6379/2
+SECRET_KEY=your-secret-key
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+```
+
+### 一键打包脚本
+
+```bash
+chmod +x build_arm64.sh
+./build_arm64.sh
+```
+
+### 打包原理
+
+- 使用 PyInstaller 将 Python 应用打包成单个 ELF 可执行文件
+- `app.spec` 配置文件会**自动扫描虚拟环境中所有已安装的包**，无需手动维护依赖列表
+- 使用 `collect_all()` 收集每个包的模块、数据文件和二进制文件
+- 最终生成约 40-50MB 的独立可执行文件
+
+### 支持的平台
+
+| 平台 | 架构 | 状态 |
+|------|------|------|
+| Linux | ARM64 (aarch64) | ✅ 已测试 |
+| Linux | x86_64 | ⚠️ 需修改 Dockerfile.build |
+| macOS | ARM64 (Apple Silicon) | ⚠️ 需本地打包 |
+
 ## 🧪 测试
 
 ```bash
